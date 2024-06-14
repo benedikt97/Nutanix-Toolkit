@@ -13,7 +13,7 @@ headers = {'Content-type': 'application/json', 'Accept': 'application/json'}
 data = {
   "kind": "alert",
   "sort_attribute": "",
-  "length": 60,
+  "length": 100,
   "sort_order": "ASCENDING",
   "offset": 0
 }
