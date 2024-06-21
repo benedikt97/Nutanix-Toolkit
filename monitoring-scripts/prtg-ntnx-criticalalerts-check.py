@@ -45,11 +45,11 @@ if __name__=='__main__':
   url = "https://" + args.ip + ":9440/api/nutanix/v3/alerts/list"
   try:
     res = requests.post(url, auth=HTTPBasicAuth(args.user, args.password), verify=False, headers = headers, data=json.dumps(data))
-  except:
-    print('0:Prism Central with IP:%s not reachable.' % args.ip)
+  except Exception as error:
+    print("An exception occurred:", error)
     sys.exit(2)
   if res.status_code != 200:
-      print('0:Prism Central with IP:%s not reachable.' % args.ip)
+      print('0:Prism Central with IP:%s not reachable. HTTP Status: %s' % (args.ip, res.status_code))
       sys.exit(2)
   response_data = res.json()
 

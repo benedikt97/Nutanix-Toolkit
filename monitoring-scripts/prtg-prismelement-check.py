@@ -36,20 +36,22 @@ if __name__=='__main__':
   )
   parser.add_argument("-H", dest="ip", default='empty', help="IP Address of Prism Element")					# Add some Arguments
   parser.add_argument("-U", dest="user", default='empty', help="Prism Element User")
-  parser.add_argument("-P", dest="password", default='empty', help="Prism Elemet Password")
+  parser.add_argument("-P", dest="password", default='empty', help="Prism Element Password")
+  parser.add_argument("-R", dest="resilient", default='1000000000', help="Prism Element Maximum resilient capacity in GB - Yellow")
+  parser.add_argument("-A", dest="alarm", default='1000000000', help="Prism Element Maximum resilient capacity in GB - Red")
   (args) = parser.parse_args()
-  if len(sys.argv)!=7:
+  if len(sys.argv)!=11:
     parser.print_help(sys.stderr)
     sys.exit(1)
 
   url = "https://" + args.ip + ":9440/PrismGateway/services/rest/v2.0/clusters/"
   try:
     res = requests.get(url, auth=HTTPBasicAuth(args.user, args.password), verify=False, headers = headers, data=json.dumps(data))
-  except:
-    print('0:Prism Central with IP:%s not reachable.' % args.ip)
+  except Exception as error:
+    print("An exception occurred:", error)
     sys.exit(2)
   if res.status_code != 200:
-      print('0:Prism Central with IP:%s not reachable.' % args.ip)
+      print('0:Prism Central with IP:%s not reachable. HTTP Status: %s' % (args.ip, res.status_code))
       sys.exit(2)
   response_data = res.json()
 
@@ -64,10 +66,16 @@ if __name__=='__main__':
   storage_usage_gb = int(storage_usage_bytes) / 1024 / 1024 / 1024
   storage_sum_gb = storage_usage_gb + storage_free_gb
 
-  print("%s Procent Storage free on Cluster. %s of %s GB used"
-         % (str(round(storage_usage_proz, 2)), str(round(storage_usage_gb,2)), str(round(storage_sum_gb,2))))
+  print("%s:%s Procent Storage free on Cluster. %s of %s GB used. Resilient Capacity is %sGB"
+         % (str(int(round(storage_usage_proz, 0))),str(round(storage_usage_proz, 2)), str(round(storage_usage_gb,2)), str(round(storage_sum_gb,2)), str(args.alarm)))
 
-  exit_code = 0
+  if storage_usage_gb > int(args.alarm):
+    exit_code = 4
+  elif storage_usage_gb > int(args.resilient):
+    exit_code = 1
+  else:
+    exit_code = 0
+
 
  # print('%s:%s kritische Alarme in PrismCentral aktiv.' % (str(not_resolved), str(not_resolved)))
   sys.exit(exit_code)
